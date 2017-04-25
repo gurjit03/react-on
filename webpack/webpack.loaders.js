@@ -1,86 +1,55 @@
-var path = require("path");
-var ExtractTextPlugin = require("extract-text-webpack-plugin");
+var webpack = require('webpack');
 
-
-module.exports = [
-  {
-    test: /\.js$/,
-    exclude: /node_modules/,
-    use: [{
-      loader: "babel-loader"
-    }]
+module.exports = {
+  entry : [
+    'script!jquery/dist/jquery.min.js',
+    './app/app.jsx'
+  ],
+  externals: {
+    jquery : 'jQuery'
   },
-  {
-    test: /\.css$/,
-    use: ((env) => {
-      if(env == 'production') {
-        return ExtractTextPlugin.extract({
-          use: [{
-            loader:'css-loader',
-            options: {
-              modules: true,
-              localIdentName: '[local]--[hash:base64:5]',
-            }
-          }]
-        });
-      }
-      else {
-        return [{
-            loader: 'style-loader'
-          }, {
-            loader:'css-loader',
-            options: {
-              modules: true,
-              localIdentName: '[local]--[hash:base64:5]',
-            }
-          }
-        ];
-      }
-    })(process.env.NODE_ENV)
-  },  
-  {
-    test: /\.less$/,
-    use: ((env) => {
-      if(env == 'production') {
-        return ExtractTextPlugin.extract({
-          use: [{
-            loader:'css-loader',
-            options: {
-              modules: true,
-              localIdentName: '[local]--[hash:base64:5]',
-            }
-          }, {
-            loader:'less-loader'
-          }]
-        });
-      }
-      else {
-        return [{
-            loader: 'style-loader'
-          }, {
-            loader:'css-loader',
-            options: {
-              modules: true,
-              localIdentName: '[local]--[hash:base64:5]',
-            }
-          }, {
-            loader:'less-loader'
-          }
-        ];
-      }
-    })(process.env.NODE_ENV)
+  plugins: [
+    new webpack.ProvidePlugin ({
+      '$' : 'jquery',
+      'jQuery' : 'jquery'
+    })
+  ],
+  output : {
+    publicPath: "http://localhost:3000/",
+    path : __dirname,
+    filename : './public/bundle.js'
   },
-  {
-    test: /\.(ttf|woff|woff2|jpeg|jpg|png|gif|svg)$/,
-    use: [
+  resolve: {
+    root : __dirname,
+    modulesDirectories : [
+      'node_modules',
+      './app/**/*'
+    ],
+    alias : {
+      components: 'app/components',
+      applicationStyles : 'app/styles/app.scss',
+    },
+    extensions : ['','.js','.jsx']
+  },
+  module: {
+    loaders: [
       {
-        loader: "file-loader",
-        options: {
-          outputPath: path.join("assets", "/"),
-          publicPath: "assets/",
-          name: '[name]--[hash:base64:5].[ext]'
-        }
+        loader : 'babel-loader',
+        query : {
+          presets: ['react','es2015']
+        },
+        test : /\.jsx?$/,
+        exclude: /(node_modules|bower_components)/
+      },
+      {
+        test: /\.(gif|png|jpe?g|svg)$/i,
+        loaders: [
+          "file-loader?publicPath=public/&outputPage=public/",
+          'image-webpack-loader'
+        ]
       }
     ]
-  }
-];
+  },
+
+  devtool: 'cheap-module-eval-source-map'
+}
